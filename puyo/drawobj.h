@@ -7,10 +7,10 @@ public:
     std::vector<int> ind;
     bool dynamic = false;
     void bind() {
-        glBindVertexArray(0);
+       // glBindVertexArray(0);
         glBindVertexArray(VAO);
     }
-    void create(std::vector<float> vertices, std::vector<int> attributes, std::vector<int> indices) {
+    void create(std::vector<float> vertices, std::vector<int> attributes, std::vector<int> indices ,GLenum test) {
         vert = vertices;
         attr = attributes;
         ind = indices;
@@ -21,10 +21,10 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
         if (!dynamic) {
-            glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), test);
         }
         else {
-            glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), test);
         }
 
 

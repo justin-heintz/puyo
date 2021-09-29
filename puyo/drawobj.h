@@ -1,53 +1,33 @@
 #pragma once
+
 class drawOBJ {
 public:
     unsigned int VBO, VAO, EBO;
-    std::vector<float> vert;
+    std::vector<float> vert = {};
     std::vector<int> attr;
     std::vector<int> ind;
-    bool dynamic = false;
+
     void bind() {
-       // glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vert.size() * 4, NULL, GL_DYNAMIC_DRAW);
         glBindVertexArray(VAO);
     }
-    void create(std::vector<float> vertices, std::vector<int> attributes, std::vector<int> indices ,GLenum test) {
-        vert = vertices;
-        attr = attributes;
+    void create(std::vector<float> vertices[], std::vector<int> indices = {}, GLenum type = GL_DYNAMIC_DRAW) {
+       // vert = vertices;
         ind = indices;
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
-        glGenBuffers(1, &EBO);
+        
         glBindVertexArray(VAO);
+
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vert.size() * 4, NULL, type);
 
-        if (!dynamic) {
-            glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), test);
-        }
-        else {
-            glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), test);
-        }
-
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-
-        if (attributes.size() != 0) {
-            std::cout << "HERE1\n";
-            for (int i = 0, start = 0; i < attributes.size(); i++) {
-                glVertexAttribPointer(i, attributes[i], GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(start * sizeof(float)));
-                glEnableVertexAttribArray(i);
-                start += attributes[i];
-            }
-        }
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
 
         if (indices.size() != 0) {
-            std::cout << "HERE2\n";
-            if (!dynamic) {
-                glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(float), indices.data(), GL_STATIC_DRAW);
-            }
-            else {
-                glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(float), indices.data(), GL_DYNAMIC_DRAW);
-            }
-
+          glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(float), indices.data(), type);
         }
 
         glEnableVertexAttribArray(0);
@@ -55,10 +35,8 @@ public:
 
     void draw() {
         if (ind.size() == 0) {
-            //https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glDrawArrays.xhtml
             glDrawArrays(GL_TRIANGLES, 0, vert.size());// glDrawArrays(GLenum mode, GLint first, GLsizei count);
-        }
-        else {
+        } else {
             glDrawElements(GL_TRIANGLES, vert.size(), GL_UNSIGNED_INT, 0);
         }
     }

@@ -31,9 +31,10 @@ float WINDOW_HEIGHT = 300;
 float UPDATE_TIMER = 60;
 
 glm::mat4 pro = glm::perspective(glm::radians(45.0f), WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
-drawOBJ element0;
-
+drawOBJ el;
+std::vector<Shader*> shaders;
 void init() {
+/*
 	unsigned int texture;
 	std::map<GLchar, Character> Characters;
 	FT_Face face;
@@ -92,13 +93,29 @@ void init() {
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+	*/
+	std::vector<float> vecs[] {
+		{0.5f,  0.5f,		0.0f, 0.0f },
+		{0.5f, -0.5f,       0.0f, 1.0f },
+		{0.5f, -0.5f,       1.0f, 1.0f }
+	};
+	el.create(vecs);
+	std::cout << "\n" << sizeof(vecs) << "\n" << sizeof(float)  << "\n" << typeid(vecs).name() << "\n" << typeid(vecs[0]).name() << "\n" << typeid(vecs[0][0]).name() << "\n";
+	shaders.push_back(new Shader("./ttf.vec", "./ttf.frag"));
 
 }
 void draw() {
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
+	
+	shaders[0]->use();
+	glUniform3f(glGetUniformLocation(shaders[0]->ID, "textColor"), 1, 1, 1);
+	shaders[0]->setVec3("textColor", 1, 0, 1);
+	el.bind();
+	el.draw();
+
+	glLoadIdentity();
     glutSwapBuffers();
 }
 void update(int) {

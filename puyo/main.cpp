@@ -95,11 +95,11 @@ void init() {
 	glBindVertexArray(0);
 	*/
 	std::vector<float> vecs[] {
-		{0.5f,  0.5f,		0.0f, 0.0f },
-		{0.5f, -0.5f,       0.0f, 1.0f },
-		{0.5f, -0.5f,       1.0f, 1.0f }
+		{-0.5f, -0.5f, 0.0f, 0.0f},
+		{ 0.5f, -0.5f, 0.0f, 0.0f},
+		{ 0.0f,  0.5f, 0.0f, 0.0f}
 	};
-	el.create(vecs);
+	el.create(*vecs);
 	std::cout << "\n" << sizeof(vecs) << "\n" << sizeof(float)  << "\n" << typeid(vecs).name() << "\n" << typeid(vecs[0]).name() << "\n" << typeid(vecs[0][0]).name() << "\n";
 	shaders.push_back(new Shader("./ttf.vec", "./ttf.frag"));
 

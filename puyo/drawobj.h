@@ -1,9 +1,10 @@
 #pragma once
-
+//https://learnopengl.com/
+//https://www.geeksforgeeks.org/passing-vector-function-cpp/
 class drawOBJ {
 public:
     unsigned int VBO, VAO, EBO;
-    std::vector<float> vert = {};
+    std::vector<float>vert;
     std::vector<int> attr;
     std::vector<int> ind;
 
@@ -12,8 +13,8 @@ public:
         glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vert.size() * 4, NULL, GL_DYNAMIC_DRAW);
         glBindVertexArray(VAO);
     }
-    void create(std::vector<float> vertices[], std::vector<int> indices = {}, GLenum type = GL_DYNAMIC_DRAW) {
-       // vert = vertices;
+    void create(std::vector<float> &vertices, std::vector<int> indices = {}, GLenum type = GL_DYNAMIC_DRAW) {
+        vert = vertices;
         ind = indices;
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
@@ -21,7 +22,7 @@ public:
         glBindVertexArray(VAO);
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vert.size() * 4, NULL, type);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size() * 4, NULL, type);
 
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);

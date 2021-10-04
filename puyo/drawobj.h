@@ -45,13 +45,21 @@ public:
     void setDataPoints(unsigned noPoints) {
         DATA_POINTS = noPoints;
     }
-    void bindT() {
+
+    void bindVao() {
+        glBindVertexArray(0);
         glBindVertexArray(VAO);
+    }
+    void bindVbo() {}
+    void bindT() {
+        
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * vertT.size(), vertT.data());
         glDrawArrays(GL_TRIANGLES, 0, (vertT.size() / DATA_POINTS) );
 
-        glBindVertexArray(0);
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
     }
 
 

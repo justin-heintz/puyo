@@ -4,6 +4,7 @@
 class drawOBJ {
 public:
     unsigned int VBO, VAO, DATA_POINTS = 4;
+
     std::vector<float> vertT;
     std::vector<int> attr;
     std::vector<int> ind;
@@ -36,6 +37,9 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
+    void genVbos(int n = 4) {
+
+    }
     void updateData(std::vector<float> vertices) {
         vertT = vertices;
     }
@@ -59,7 +63,7 @@ public:
        
         //glEnableVertexAttribArray(0);
         //glBindBuffer(GL_ARRAY_BUFFER, 0);
-        ///glBindVertexArray(0);
+        //glBindVertexArray(0);
         
     }
 

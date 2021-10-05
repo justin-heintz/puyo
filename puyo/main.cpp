@@ -48,8 +48,8 @@ std::map<GLchar, Character> Characters;
 FT_Face face;
 FT_Library ft;
 float scale = 12;
-float xt = -1.0f;
-float yt = -0.5f;
+float xt = 0.9f;
+float yt = 0.9f;
 std::string::const_iterator c;
 void init() {
 	if (FT_Init_FreeType(&ft)) { 
@@ -116,12 +116,13 @@ void draw() {
 	shaders[0]->use();
 	el.bindVao();
 	el.bindT();
-	/*
+	
 	shaders[1]->use();
 	shaders[1]->setVec3("textColor", glm::vec3(1.0f, 0.0f, 1.0f));
-	
+	std::cout<<"A \n";
 	// iterate through all characters
 	font_draw_obj.bindVao();
+	
 	for (c = text.begin(); c != text.end(); c++) {
 		Character ch = Characters[*c];
 
@@ -140,14 +141,17 @@ void draw() {
 			 xpos + w, ypos,       1.0f, 1.0f ,
 			 xpos + w, ypos + h,   1.0f, 0.0f 
 		};
+		glBindTexture(GL_TEXTURE_2D, ch.TextureID);
 		std::cout << (vertices.size()/ 4) << "\n";
+
 		
+
 		font_draw_obj.updateData(vertices);
 		font_draw_obj.bindT();
 		
 		xt += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
 	}
-	 */
+	/* */
 
 	glLoadIdentity();
     glutSwapBuffers();

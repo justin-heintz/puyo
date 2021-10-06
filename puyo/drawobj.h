@@ -29,7 +29,6 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
         glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertT.size(), vertT.data(), GL_DYNAMIC_DRAW);
-
         glVertexAttribPointer(0, DATA_POINTS, GL_FLOAT, GL_FALSE, sizeof(float) * DATA_POINTS, (void*)0);
         
         //clear buffers that are selected
@@ -37,9 +36,7 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
-    void genVbos(int n = 4) {
 
-    }
     void updateData(std::vector<float> vertices) {
         vertT = vertices;
     }
@@ -51,7 +48,6 @@ public:
     }
 
     void bindVao() {
-
         glBindVertexArray(VAO);
     }
     void bindT() {

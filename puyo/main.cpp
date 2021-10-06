@@ -28,17 +28,16 @@
 
 float WINDOW_WIDTH = 300;
 float WINDOW_HEIGHT = 300;
-float UPDATE_TIMER = 60;
+float UPDATE_TIMER = 10;
 drawOBJ el;
 drawOBJ font_draw_obj;
-
 
 glm::mat4 pro = glm::perspective(glm::radians(45.0f), WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
 
 std::vector<Shader*> shaders;
 float xm = 0.5; 
 float ym = 0.5;
-bool updateEL = true;
+bool updateEL = true, updateDisplay = true;
 std::vector<float> flatvec{
 0.0f, 0.0f, 0.0f, 0.0f,
 0.0f, 0.0f, 0.0f, 0.0f, 
@@ -47,13 +46,10 @@ std::vector<float> flatvec{
 0.0f, 0.0f, 0.0f, 0.0f, 
 0.0f, 0.0f, 0.0f, 0.0f
 };
-std::string text = "Hello World";
 unsigned int texture;
 std::map<GLchar, Character> Characters;
 FT_Face face;
 FT_Library ft;
-float scale = 0.009f;
- 
 std::string::const_iterator c;
 void setupFont() {
 	if (FT_Init_FreeType(&ft)) {
@@ -101,6 +97,38 @@ void setupFont() {
 	FT_Done_Face(face);
 	FT_Done_FreeType(ft);
 }
+void renderText(std::string text, float x, float y, float size, glm::vec3 color = glm::vec3(0.0f, 1.0f, 1.0f )) {
+	shaders[1]->use();
+	shaders[1]->setVec3("textColor", color);
+	font_draw_obj.bindVao();
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	for (c = text.begin(); c != text.end(); c++) {
+		Character ch = Characters[*c];
+
+		float xpos = x + ch.Bearing.x * size;
+		float ypos = y - (ch.Size.y - ch.Bearing.y) * size;
+
+		float w = ch.Size.x * size;
+		float h = ch.Size.y * size;
+		// update VBO for each character
+		std::vector<float> vertices{
+			 xpos,     ypos + h,   0.0f, 0.0f ,
+			 xpos,     ypos,       0.0f, 1.0f ,
+			 xpos + w, ypos,       1.0f, 1.0f ,
+
+			 xpos,     ypos + h,   0.0f, 0.0f ,
+			 xpos + w, ypos,       1.0f, 1.0f ,
+			 xpos + w, ypos + h,   1.0f, 0.0f
+		};
+		glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+		font_draw_obj.updateData(vertices);
+		font_draw_obj.bindT();
+		x += (ch.Advance >> 6) * size; // bitshift by 6 to get value in pixels (2^6 = 64)
+	}
+	glDisable(GL_BLEND);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
 void init() {
 	setupFont();
  
@@ -111,54 +139,36 @@ void init() {
 	shaders.push_back(new Shader("./shaders/ttf.vec", "./shaders/ttf.frag"));
 }
 void draw() {
-    glEnable(GL_DEPTH_TEST);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	if (updateDisplay) {
+		glEnable(GL_DEPTH_TEST);
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	shaders[1]->use();
-	shaders[1]->setVec3("textColor", glm::vec3(1.0f, 1.0f, 1.0f));
+		for (float i = -1; i <= 1; i += 0.5) {
+			for (float r = -1; r <= 1; r += 0.5) {
+				std::string strx = std::to_string(i);
+				strx.resize(4);
+				std::string stry = std::to_string(r);
+				stry.resize(4);
 
-	// iterate through all characters
-	font_draw_obj.bindVao();
-	float xt = 0.0f + xm;
-	float yt = 0.0f + ym;
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-	for (c = text.begin(); c != text.end(); c++) {
-		Character ch = Characters[*c];
+				float random_integer, b, c;
+				float lowest = 0.1, highest = 1.0;
+				float range = (highest - lowest) + 1;
+				random_integer = lowest + float(range * rand() / (RAND_MAX + 1.0));
+				b = lowest + float(range * rand() / (RAND_MAX + 1.0));
+				c = lowest + float(range * rand() / (RAND_MAX + 1.0));
+				std::cout << random_integer << "-" << b << "-" << c << "\n";
+				renderText("x:" + strx + " y:" + stry, i, r, 0.009f, glm::vec3(b, random_integer, c));
+			}
+		}
 
-		float xpos = xt + ch.Bearing.x * scale;
-		float ypos = yt - (ch.Size.y - ch.Bearing.y) * scale;
-
-		float w = ch.Size.x * scale;
-		float h = ch.Size.y * scale;
-		// update VBO for each character
-		std::vector<float> vertices{
-			 xpos,     ypos + h,   0.0f, 0.0f ,
-			 xpos,     ypos,       0.0f, 1.0f ,
-			 xpos + w, ypos,       1.0f, 1.0f ,
-
-			 xpos,     ypos + h,   0.0f, 0.0f ,
-			 xpos + w, ypos,       1.0f, 1.0f ,
-			 xpos + w, ypos + h,   1.0f, 0.0f 
-		};
-		glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-		font_draw_obj.updateData(vertices);
-	
-		font_draw_obj.bindT();
-		
-		xt += (ch.Advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
+		shaders[0]->use();
+		el.bindVao();
+		el.bindT();
+		updateDisplay = false;
+		glutSwapBuffers();
 	}
-	//glBindTexture(GL_TEXTURE_2D, 0);
-
-
-	shaders[0]->use();
-	el.bindVao();
-	el.bindT();
-
-	glDisable(GL_BLEND);
-    glutSwapBuffers();
 }
 void update(int) {
 	glutPostRedisplay();
@@ -172,6 +182,7 @@ void update(int) {
 		el.updateData(tmp);
 	}
 	updateEL = false;
+	updateDisplay = true;
 	glutTimerFunc(1000.0 / UPDATE_TIMER, update, 0);
 }
 void normalKeysFunc(unsigned char key,int x,int y) {

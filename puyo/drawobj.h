@@ -9,16 +9,7 @@ public:
     std::vector<int> attr;
     std::vector<int> ind;
 
-    void draw() {
-        if (ind.size() == 0) {
-            //glDrawArrays(GL_TRIANGLES, 0, vert.size()); 
-
-        } else {
-            //glDrawElements(GL_TRIANGLES, vert.size(), GL_UNSIGNED_INT, 0);
-        } 
-    }
-
-    void createT(std::vector<float> vertices, std::vector<int> indices = {}) {
+    void create(std::vector<float> vertices, std::vector<int> indices = {}) {
         vertT = vertices;
         ind = indices;
 
@@ -36,8 +27,7 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
-
-    void updateData(std::vector<float> vertices) {
+    void setData(std::vector<float> vertices) {
         vertT = vertices;
     }
     void setIndices(std::vector<int> indices) {
@@ -46,23 +36,18 @@ public:
     void setDataPoints(unsigned noPoints) {
         DATA_POINTS = noPoints;
     }
-
     void bindVao() {
         glBindVertexArray(VAO);
     }
-    void bindT() {
-        
+    void draw() {
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * vertT.size(),  vertT.data());
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawArrays(GL_TRIANGLES, 0, (vertT.size() / DATA_POINTS) );
-       
-        //glEnableVertexAttribArray(0);
-        //glBindBuffer(GL_ARRAY_BUFFER, 0);
-        //glBindVertexArray(0);
-        
+        if (ind.size() == 0) {
+            glDrawArrays(GL_TRIANGLES, 0, (vertT.size() / DATA_POINTS));
+        } else {
+            glDrawElements(GL_TRIANGLES, (ind.size()  ), GL_UNSIGNED_INT, ind.data());
+        }
     }
-
-
 };
 

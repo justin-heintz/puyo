@@ -1,8 +1,8 @@
 #version 330 core
-
+uniform vec3 colorIN;
 out vec4 color;
 
 void main()
 {    
-    color = vec4(1.0f, 0.5f, 0.2f, 1.0);
+    color = vec4(colorIN, 1.0);
 }  

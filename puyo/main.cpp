@@ -29,28 +29,25 @@
 float WINDOW_WIDTH = 300;
 float WINDOW_HEIGHT = 300;
 float UPDATE_TIMER = 10;
-drawOBJ el;
-drawOBJ font_draw_obj;
+drawOBJ el, font_draw_obj, square, squarea, squareb, squarec, squared, squaree, squaref;
 
 glm::mat4 pro = glm::perspective(glm::radians(45.0f), WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
 
-std::vector<Shader*> shaders;
 float xm = 0.5; 
 float ym = 0.5;
+
 bool updateEL = true, updateDisplay = true;
-std::vector<float> flatvec{
-0.0f, 0.0f, 0.0f, 0.0f,
-0.0f, 0.0f, 0.0f, 0.0f, 
-0.0f, 0.0f, 0.0f, 0.0f,
-0.0f, 0.0f, 0.0f, 0.0f,
-0.0f, 0.0f, 0.0f, 0.0f, 
-0.0f, 0.0f, 0.0f, 0.0f
-};
-unsigned int texture;
+
+std::vector<Shader*> shaders;
+std::vector<float> flatvec(24);
 std::map<GLchar, Character> Characters;
+std::string::const_iterator c;
+
+unsigned int texture;
 FT_Face face;
 FT_Library ft;
-std::string::const_iterator c;
+
+
 void setupFont() {
 	if (FT_Init_FreeType(&ft)) {
 		std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
@@ -61,7 +58,7 @@ void setupFont() {
 		std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
 	}
 
-	FT_Set_Pixel_Sizes(face, 0, 10);
+	FT_Set_Pixel_Sizes(face, 0, 48);
 
 	if (FT_Load_Char(face, 'X', FT_LOAD_RENDER)) {
 		std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
@@ -92,7 +89,7 @@ void setupFont() {
 		};
 		Characters.insert(std::pair<char, Character>(cc, character));
 	}//end of the for
-
+	
 	// destroy FreeType once we're finished
 	FT_Done_Face(face);
 	FT_Done_FreeType(ft);
@@ -122,19 +119,97 @@ void renderText(std::string text, float x, float y, float size, glm::vec3 color 
 			 xpos + w, ypos + h,   1.0f, 0.0f
 		};
 		glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-		font_draw_obj.updateData(vertices);
-		font_draw_obj.bindT();
+		font_draw_obj.setData(vertices);
+		font_draw_obj.draw();
 		x += (ch.Advance >> 6) * size; // bitshift by 6 to get value in pixels (2^6 = 64)
 	}
 	glDisable(GL_BLEND);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
+
 void init() {
 	setupFont();
  
-	font_draw_obj.createT(flatvec);
-	el.createT(flatvec);
+	font_draw_obj.create(flatvec);
+	font_draw_obj.setIndices({0,1,2,0,5,2});
 	
+	el.create(flatvec);
+	
+	squarea.create(flatvec);
+	squarea.setData(
+		{
+			-1, 0.16,	0,0,
+			-1, 0.32,	0,0,
+			-0.84, 0.16,	0,0,
+			-0.84, 0.32,	0,0,
+		}
+	);
+	squareb.create(flatvec);
+	squareb.setData(
+		{
+			-0.84, 0.16,	0,0,
+			-0.84, 0.32,	0,0,
+			-0.68, 0.16,	0,0,
+			-0.68, 0.32,	0,0,
+		}
+	);
+	squarec.create(flatvec);
+	squarec.setData(
+		{
+			-0.68, 0.16,	0,0,
+			-0.68, 0.32,	0,0,
+			-0.52, 0.16,	0,0,
+			-0.52, 0.32,	0,0,
+		}
+	);
+	squared.create(flatvec);
+	squared.setData(
+		{
+			-0.52, 0.16,	0,0,
+			-0.52, 0.32,	0,0,
+			-0.36, 0.16,	0,0,
+			-0.36, 0.32,	0,0,
+		}
+	);
+	squaree.create(flatvec);
+	squaree.setData(
+		{
+			-0.36, 0.16,	0,0,
+			-0.36, 0.32,	0,0,
+			-0.2, 0.16,	0,0,
+			-0.2, 0.32,	0,0,
+		}
+	);
+	squaref.create(flatvec);
+	squaref.setData(
+		{
+			-0.2, 0.16,	0,0,
+			-0.2, 0.32,	0,0,
+			-0.04, 0.16,	0,0,
+			-0.04, 0.32,	0,0,
+		}
+	);
+
+	squarea.setIndices({ 0,1,2, 1,2,3 });
+	squareb.setIndices({ 0,1,2, 1,2,3 });
+	squarec.setIndices({ 0,1,2, 1,2,3 });
+	squared.setIndices({ 0,1,2, 1,2,3 });
+	squaree.setIndices({ 0,1,2, 1,2,3 });
+	squaref.setIndices({ 0,1,2, 1,2,3 });
+
+
+	square.create(flatvec);
+	square.setData(
+		{
+			0.16, 0.16,	0,0,
+			0.16, 0.32,	0,0,
+			0.32, 0.16,	0,0,
+			0.32, 0.32,	0,0,
+		}
+	);
+	square.setIndices({ 0,1,2, 1,2,3 });
+
+
 	shaders.push_back(new Shader("./shaders/triangle.vec", "./shaders/triangle.frag"));
 	shaders.push_back(new Shader("./shaders/ttf.vec", "./shaders/ttf.frag"));
 }
@@ -143,10 +218,10 @@ void draw() {
 		glEnable(GL_DEPTH_TEST);
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 		for (float i = -1; i <= 1; i += 0.5) {
-			for (float r = -1; r <= 1; r += 0.5) {
+			for (float r = -0.9; r <= 1; r += 0.5) {
 				std::string strx = std::to_string(i);
 				strx.resize(4);
 				std::string stry = std::to_string(r);
@@ -158,14 +233,47 @@ void draw() {
 				random_integer = lowest + float(range * rand() / (RAND_MAX + 1.0));
 				b = lowest + float(range * rand() / (RAND_MAX + 1.0));
 				c = lowest + float(range * rand() / (RAND_MAX + 1.0));
-				std::cout << random_integer << "-" << b << "-" << c << "\n";
-				renderText("x:" + strx + " y:" + stry, i, r, 0.009f, glm::vec3(b, random_integer, c));
+
+				renderText("x:" + strx + " y:" + stry, i, r, 0.002f, glm::vec3(b, random_integer, c));
 			}
 		}
 
 		shaders[0]->use();
+		shaders[0]->setVec3("colorIN", glm::vec3(0.341f, 0.859f, 1.0f));
+		square.bindVao();
+		square.draw();
+
+		shaders[0]->setVec3("colorIN", glm::vec3(1.0f, 0.859f, 1.0f));
+		squarea.bindVao();
+		squarea.draw();
+
+		shaders[0]->setVec3("colorIN", glm::vec3(1.0f, 0.859f, 1.0f));
+		squareb.bindVao();
+		squareb.draw();
+		
+		shaders[0]->setVec3("colorIN", glm::vec3(1.0f, 0.859f, 1.0f));
+		squarec.bindVao();
+		squarec.draw();
+
+		shaders[0]->setVec3("colorIN", glm::vec3(1.0f, 0.859f, 1.0f));
+		squared.bindVao();
+		squared.draw();
+
+		shaders[0]->setVec3("colorIN", glm::vec3(1.0f, 0.859f, 1.0f));
+		squaree.bindVao();
+		squaree.draw();
+
+		shaders[0]->setVec3("colorIN", glm::vec3(1.0f, 0.859f, 1.0f));
+		squaref.bindVao();
+		squaref.draw();
+
+
+
+		shaders[0]->setVec3("colorIN", glm::vec3(0.212f, 1.0f, 0.353f));
 		el.bindVao();
-		el.bindT();
+		el.draw();
+
+
 		updateDisplay = false;
 		glutSwapBuffers();
 	}
@@ -178,8 +286,7 @@ void update(int) {
 			 xm, (ym * -1), 0.0f, 0.0f, // right 
 			 xm - xm,  ym, 0.0f, 0.0f // top  
 		}; 
-		std::cout << xm << " - " << ym << "\n";
-		el.updateData(tmp);
+		el.setData(tmp);
 	}
 	updateEL = false;
 	updateDisplay = true;
@@ -193,7 +300,7 @@ void normalKeysFunc(unsigned char key,int x,int y) {
 			 0.6f, -0.6f, 0.0f, 0.0f, // right 
 			 0.0f,  0.5f, 0.0f, 0.0f // top  
 		};
-		el.updateData(flatvec);
+		el.setData(flatvec);
 	}
 	if (key == '1') {}
 	if (key == '2') {}

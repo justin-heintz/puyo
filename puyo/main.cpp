@@ -38,8 +38,10 @@ float ym = 0.5;
 
 bool updateEL = true, updateDisplay = true;
 
+std::vector<drawOBJ*> blocks;
 std::vector<Shader*> shaders;
 std::vector<float> flatvec(24);
+
 std::map<GLchar, Character> Characters;
 std::string::const_iterator c;
 
@@ -47,6 +49,7 @@ unsigned int texture;
 FT_Face face;
 FT_Library ft;
 
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 
 void setupFont() {
 	if (FT_Init_FreeType(&ft)) {
@@ -135,68 +138,21 @@ void init() {
 	
 	el.create(flatvec);
 	
-	squarea.create(flatvec);
-	squarea.setData(
-		{
-			-1, 0.16,	0,0,
-			-1, 0.32,	0,0,
-			-0.84, 0.16,	0,0,
-			-0.84, 0.32,	0,0,
-		}
-	);
-	squareb.create(flatvec);
-	squareb.setData(
-		{
-			-0.84, 0.16,	0,0,
-			-0.84, 0.32,	0,0,
-			-0.68, 0.16,	0,0,
-			-0.68, 0.32,	0,0,
-		}
-	);
-	squarec.create(flatvec);
-	squarec.setData(
-		{
-			-0.68, 0.16,	0,0,
-			-0.68, 0.32,	0,0,
-			-0.52, 0.16,	0,0,
-			-0.52, 0.32,	0,0,
-		}
-	);
-	squared.create(flatvec);
-	squared.setData(
-		{
-			-0.52, 0.16,	0,0,
-			-0.52, 0.32,	0,0,
-			-0.36, 0.16,	0,0,
-			-0.36, 0.32,	0,0,
-		}
-	);
-	squaree.create(flatvec);
-	squaree.setData(
-		{
-			-0.36, 0.16,	0,0,
-			-0.36, 0.32,	0,0,
-			-0.2, 0.16,	0,0,
-			-0.2, 0.32,	0,0,
-		}
-	);
-	squaref.create(flatvec);
-	squaref.setData(
-		{
-			-0.2, 0.16,	0,0,
-			-0.2, 0.32,	0,0,
-			-0.04, 0.16,	0,0,
-			-0.04, 0.32,	0,0,
-		}
-	);
-
-	squarea.setIndices({ 0,1,2, 1,2,3 });
-	squareb.setIndices({ 0,1,2, 1,2,3 });
-	squarec.setIndices({ 0,1,2, 1,2,3 });
-	squared.setIndices({ 0,1,2, 1,2,3 });
-	squaree.setIndices({ 0,1,2, 1,2,3 });
-	squaref.setIndices({ 0,1,2, 1,2,3 });
-
+	float x = -1.0,  y = -1.0,  h = 0.1666666666,  w = 0.1666666666;
+	for (int i = 0; i <6; i++) {
+		blocks.push_back( new drawOBJ() );
+		blocks[i]->create(flatvec);
+		blocks[i]->setData(
+			{
+				x,     y,		0,0,
+				x,     y + h,	0,0,
+				x + w, y,		0,0,
+				x + w, y + h,	0,0,
+			}
+		);
+		x = x + w;
+ 		blocks[i]->setIndices({ 0,1,2, 1,2,3 });
+	}
 
 	square.create(flatvec);
 	square.setData(
@@ -218,7 +174,7 @@ void draw() {
 		glEnable(GL_DEPTH_TEST);
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 		for (float i = -1; i <= 1; i += 0.5) {
 			for (float r = -0.9; r <= 1; r += 0.5) {
@@ -238,36 +194,23 @@ void draw() {
 			}
 		}
 
+
 		shaders[0]->use();
-		shaders[0]->setVec3("colorIN", glm::vec3(0.341f, 0.859f, 1.0f));
-		square.bindVao();
-		square.draw();
-
-		shaders[0]->setVec3("colorIN", glm::vec3(1.0f, 0.859f, 1.0f));
-		squarea.bindVao();
-		squarea.draw();
-
-		shaders[0]->setVec3("colorIN", glm::vec3(1.0f, 0.859f, 1.0f));
-		squareb.bindVao();
-		squareb.draw();
 		
-		shaders[0]->setVec3("colorIN", glm::vec3(1.0f, 0.859f, 1.0f));
-		squarec.bindVao();
-		squarec.draw();
+		
+		for (int i = 0; i < 6; i++) {
 
-		shaders[0]->setVec3("colorIN", glm::vec3(1.0f, 0.859f, 1.0f));
-		squared.bindVao();
-		squared.draw();
+			float random_integer, b, c;
+			float lowest = 0.1, highest = 1.0;
+			float range = (highest - lowest) + 1;
+			random_integer = lowest + float(range * rand() / (RAND_MAX + 1.0));
+			b = lowest + float(range * rand() / (RAND_MAX + 1.0));
+			c = lowest + float(range * rand() / (RAND_MAX + 1.0));
 
-		shaders[0]->setVec3("colorIN", glm::vec3(1.0f, 0.859f, 1.0f));
-		squaree.bindVao();
-		squaree.draw();
-
-		shaders[0]->setVec3("colorIN", glm::vec3(1.0f, 0.859f, 1.0f));
-		squaref.bindVao();
-		squaref.draw();
-
-
+			shaders[0]->setVec3("colorIN", glm::vec3(b, random_integer, c));
+			blocks[i]->bindVao();
+			blocks[i]->draw();
+		}
 
 		shaders[0]->setVec3("colorIN", glm::vec3(0.212f, 1.0f, 0.353f));
 		el.bindVao();
@@ -335,7 +278,9 @@ void main(int argc, char** argv) {
 	glutCreateWindow("Puyo Puyo");
 
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
 	glEnable(GL_MULTISAMPLE);
+
 	glEnable(GL_TEXTURE_2D);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // disable byte-alignment restriction
 	glewInit();

@@ -1,6 +1,4 @@
 #pragma once
-//https://learnopengl.com/
-//https://www.geeksforgeeks.org/passing-vector-function-cpp/
 class drawOBJ {
 public:
     unsigned int VBO, VAO, DATA_POINTS = 4;

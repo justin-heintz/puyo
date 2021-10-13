@@ -189,6 +189,8 @@ void draw() {
 				random_integer = lowest + float(range * rand() / (RAND_MAX + 1.0));
 				b = lowest + float(range * rand() / (RAND_MAX + 1.0));
 				c = lowest + float(range * rand() / (RAND_MAX + 1.0));
+				//std::cout << random_integer << "-" << b << "-" << c << "\n";
+				renderText("x:" + strx + " y:" + stry, i, r, 0.009f, glm::vec3(b, random_integer, c));
 
 				renderText("x:" + strx + " y:" + stry, i, r, 0.002f, glm::vec3(b, random_integer, c));
 			}

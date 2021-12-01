@@ -1,7 +1,18 @@
 #version 330 core
-layout (location = 0) in vec4 vertex;
-uniform vec3 cam;
+layout (location = 0) in vec3 vertex;
+layout (location = 1) in vec3 color;
+layout (location = 2) in vec2 text;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+ 
+out vec2 TexCoord;
+
 void main()
 {  
-    gl_Position =  vec4(vertex.xy, -1.0, 1.0 );
+    gl_Position =  projection * view * model * vec4(vertex, 1.0);
+ 
+    TexCoord = text;
+
 }  

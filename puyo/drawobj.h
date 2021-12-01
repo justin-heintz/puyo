@@ -6,7 +6,7 @@ public:
     std::vector<float> vertT;
     std::vector<int> attr;
     std::vector<int> ind;
-
+    glm::vec3 pos;
     void create(std::vector<float> vertices, std::vector<int> indices = {}) {
         vertT = vertices;
         ind = indices;
@@ -24,6 +24,9 @@ public:
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
+    }
+    std::vector<float> getData() {
+        return vertT;
     }
     void setData(std::vector<float> vertices) {
         vertT = vertices;

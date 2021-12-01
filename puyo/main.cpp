@@ -1,4 +1,5 @@
 //c++ libs
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -7,6 +8,8 @@
 #include <fstream>
 #include <sstream>
 #include <map>
+
+//#include <curl.h>
 
 //opengl libs
 #include <GL/glew.h>
@@ -32,7 +35,7 @@ float WINDOW_HEIGHT = 300;
 float BLOCK_WIDTH = 0.1666666666;
 float BLOCK_HEIGHT = 0.1666666666;
 
-float UPDATE_TIMER = 10;
+float UPDATE_TIMER = 60;
 
 drawOBJ font_draw_obj;
 
@@ -48,6 +51,21 @@ std::string::const_iterator c;
 unsigned int texture;
 FT_Face face;
 FT_Library ft;
+
+int ACTIVE_BLOCK = 0;
+std::vector<int>board(42, 0);
+std::vector<float>tmp(16);
+
+class grid {
+public:
+	static std::vector<std::vector<int>> create(int width, int height) {
+		std::vector<std::vector<int>> row(width);
+		std::vector<int> col(height);
+		std::fill(row.begin(), row.end(), col);
+		return row;
+	}
+
+};
 
 void setupFont() {
 	if (FT_Init_FreeType(&ft)) {
@@ -128,24 +146,57 @@ void renderText(std::string text, float x, float y, float size, glm::vec3 color 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+/*MOVE THESE FUNCTIONS LATER*/
+int getRow(int position) {
+	return std::floor(position / 6);
+}
+int getCol(int position) {
+	return (position - (getRow(position) * 6));
+}
+int addRow(int position) {
+	return position + 6;
+}
+int addCol(int position) {
+	if (getRow(position) == getRow(position + 1)) {
+		return position + 1;
+	}
+	else {
+		return -1;
+	}
+}
+int subCol(int position) {
+	if (getRow(position) == getRow(position - 1)) {
+		return position - 1;
+	}
+	else {
+		return -1;
+	}
+}
+int canMove(int pos){
+	
+	
+	return 0;
+}
 void init() {
 	setupFont();
  	font_draw_obj.create(flatvec);
 	font_draw_obj.setIndices({0,1,2,0,5,2});
  
 	float x = -1.0,  y = -1.0,  h = BLOCK_HEIGHT,  w = BLOCK_WIDTH;
+
 	for (int i = 0; i <6; i++) {
 		blocks.push_back( new drawOBJ() );
+		
 		blocks[i]->create({
-				x,     y,		0,0,
-				x,     y + h,	0,0,
-				x + w, y,		0,0,
-				x + w, y + h,	0,0,
+			x, y, 0, 0,
+			x, y + h, 0, 0,
+			x + w, y, 0, 0,
+			x + w, y + h, 0, 0,
 			});
 		x = x + w;
  		blocks[i]->setIndices({ 0,1,2, 1,2,3 });
 	}
-
+ 
 	//load shaders
 	shaders.push_back(new Shader("./shaders/triangle.vec", "./shaders/triangle.frag"));
 	shaders.push_back(new Shader("./shaders/ttf.vec", "./shaders/ttf.frag"));
@@ -155,7 +206,7 @@ void draw() {
 		glEnable(GL_DEPTH_TEST);
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 		shaders[0]->use();
 		
@@ -172,7 +223,7 @@ void draw() {
 void update(int) {
 	glutPostRedisplay();
 	updateDisplay = true;
-	std::cout << "\n";
+	
 	glutTimerFunc(1000.0 / UPDATE_TIMER, update, 0);
 }
 void normalKeysFunc(unsigned char key,int x,int y) {
@@ -183,13 +234,54 @@ void normalKeysFunc(unsigned char key,int x,int y) {
 	if (key == '5') {}
 	if (key == '6') {}
 	if (key == '3') {}
-	if (key == 'w') {}
-	if (key == 's') {}
-	if (key == 'a') {}
-	if (key == 'd') {}
+
+	if (key == 'w') {
+		
+		canMove(ACTIVE_BLOCK);
+		std::vector<float> test = blocks[ACTIVE_BLOCK]->getData();
+		tmp = {
+			test[0] , test[1] += 0.1, 0, 0,
+			test[4] , test[5] += 0.1, 0, 0,
+			test[8] , test[9] += 0.1, 0, 0,
+			test[12] ,test[13] += 0.1, 0, 0,
+		};
+		blocks[ACTIVE_BLOCK]->setData(tmp);
+	}
+	if (key == 's') {
+		std::vector<float> test = blocks[ACTIVE_BLOCK]->getData();
+		tmp = {
+			test[0] , test[1] -= 0.1, 0, 0,
+			test[4] , test[5] -= 0.1, 0, 0,
+			test[8] , test[9] -= 0.1, 0, 0,
+			test[12] ,test[13] -= 0.1, 0, 0,
+		};
+		blocks[ACTIVE_BLOCK]->setData(tmp);
+	
+	}
+	if (key == 'a') {
+		std::vector<float> test = blocks[ACTIVE_BLOCK]->getData();
+		tmp = {
+			test[0] -= 0.1, test[1], 0, 0,
+			test[4] -= 0.1, test[5], 0, 0,
+			test[8] -= 0.1, test[9], 0, 0,
+			test[12] -= 0.1,test[13], 0, 0,
+		};
+		blocks[ACTIVE_BLOCK]->setData(tmp);
+	}
+	if (key == 'd') {
+		std::vector<float> test = blocks[ACTIVE_BLOCK]->getData();
+		tmp = {
+			test[0] += 0.1, test[1], 0, 0,
+			test[4] += 0.1, test[5], 0, 0,
+			test[8] += 0.1, test[9], 0, 0,
+			test[12] += 0.1,test[13], 0, 0,
+		};
+		blocks[ACTIVE_BLOCK]->setData(tmp);
+	}
 }
 
 void main(int argc, char** argv) {
+
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);
 

@@ -182,7 +182,7 @@ void draw() {
 
 
 			glm::mat4 view = glm::mat4(1.0f);
-			view = glm::translate(view, glm::vec3(i*2, 0.0, V));
+			view = glm::translate(view, glm::vec3(0.0, 0.0, V));
 			shaders[0]->setMat4("view", view);
 
 

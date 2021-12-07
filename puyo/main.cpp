@@ -49,6 +49,7 @@ unsigned int texture;
 FT_Face face;
 FT_Library ft;
 
+int mouseX = 0, mouseY = 0;
 float R = 0.0;
 float V = -10.0f;
 
@@ -133,7 +134,7 @@ void renderText(std::string text, float x, float y, float size, glm::vec3 color 
 
 void init() {
 
-	for (int i = 0; i <100 ; i++) {
+	for (int i = 0; i < 1 ; i++) {
 		blocks.push_back( new drawOBJ() );
 	}
  
@@ -155,13 +156,14 @@ void init() {
 
 	//unsigned char* data = stbi_load("container.jpg", &width, &height, &nrChannels, 0);
 	unsigned char* data = stbi_load("puyo2.png", &width, &height, &nrChannels, 0);
-	//unsigned char* data = stbi_load("face.png", &width, &height, &nrChannels, 0);
+	//unsigned char* data = stbi_load("block.png", &width, &height, &nrChannels, 0);
 	
 	if (data){
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}else{std::cout << "Failed to load texture ??" << std::endl;}
 	stbi_image_free(data);
+
 }
 void draw() {
 	if (updateDisplay) {
@@ -205,13 +207,6 @@ void update(int) {
 }
 void normalKeysFunc(unsigned char key,int x,int y) {
 	std::cout << R << " | "<< V << "\n";
-	if (key == '0') {}
-	if (key == '1') {}
-	if (key == '2') {}
-	if (key == '5') {}
-	if (key == '6') {}
-	if (key == '3') {}
-
 	if (key == 'w') {
 		R += 0.9f;
 	}
@@ -225,7 +220,15 @@ void normalKeysFunc(unsigned char key,int x,int y) {
 		V += 0.5f;
 	}
 }
+void mouseFunc(int button, int state,	int x, int y) {
+	std::cout << button << " | " << state << " | " << x << " | " << y << " | \n";
+}
+void mouseMoveFunc(int x, int y) {
+	std::cout << x << " | " << y << " | \n";
+	mouseX//
+}
 
+ 
 void main(int argc, char** argv) {
 
 	glutInit(&argc, argv);
@@ -249,7 +252,8 @@ void main(int argc, char** argv) {
 	glutIdleFunc(draw);
 
 	glutKeyboardFunc(normalKeysFunc);
-
+	glutMouseFunc(mouseFunc);
+	glutPassiveMotionFunc(mouseMoveFunc);
 	//update
 	glutTimerFunc(1000.0 / UPDATE_TIMER, update, 0);
 

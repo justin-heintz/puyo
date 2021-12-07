@@ -141,32 +141,32 @@ void init() {
 	shaders.push_back(new Shader("./shaders/triangle.vec", "./shaders/triangle.frag"));
 	shaders.push_back(new Shader("./shaders/ttf.vec", "./shaders/ttf.frag"));
 
-
 	unsigned int texture;
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	// set the texture wrapping/filtering options (on the currently bound texture object)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// load and generate the texture
 	int width, height, nrChannels;
-	unsigned char* data = stbi_load("container.jpg", &width, &height, &nrChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	stbi_set_flip_vertically_on_load(true);
+
+	//unsigned char* data = stbi_load("container.jpg", &width, &height, &nrChannels, 0);
+	unsigned char* data = stbi_load("puyo2.png", &width, &height, &nrChannels, 0);
+	//unsigned char* data = stbi_load("face.png", &width, &height, &nrChannels, 0);
+	
+	if (data){
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}else{std::cout << "Failed to load texture ??" << std::endl;}
-
 	stbi_image_free(data);
-
-
 }
 void draw() {
 	if (updateDisplay) {
 		glEnable(GL_DEPTH_TEST);
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -174,15 +174,15 @@ void draw() {
 		shaders[0]->setInt("ourTexture", texture);
 
 		for (int i = 0; i < blocks.size(); i++) {
-			shaders[0]->setVec3("colorIN", glm::vec3(1.0, 0.1, 0.5));
+			shaders[0]->setVec3("colorIN", glm::vec3(i * 0.06, i * 0.04, i * 0.02));
 
 			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::rotate(model, glm::radians(R*i), glm::vec3(2.0f, 1.0f, 0.0f));
+			model = glm::rotate(model, glm::radians(R), glm::vec3(1.0f, 1.0f, 1.0f));
 			shaders[0]->setMat4("model", model);
 
 
 			glm::mat4 view = glm::mat4(1.0f);
-			view = glm::translate(view, glm::vec3(0.0, 0.0, V));
+			view = glm::translate(view, glm::vec3(0.0, -5+0.5*i, V));
 			shaders[0]->setMat4("view", view);
 
 
@@ -213,10 +213,10 @@ void normalKeysFunc(unsigned char key,int x,int y) {
 	if (key == '3') {}
 
 	if (key == 'w') {
-		R += 0.5f;
+		R += 0.9f;
 	}
 	if (key == 's') {
-		R -= 0.5f;
+		R -= 0.9f;
 	}
 	if (key == 'a') {
 		V -= 0.5f;

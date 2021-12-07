@@ -8,5 +8,12 @@ out vec4 material;
 
 void main()
 {    
-    material = texture(ourTexture, TexCoord)  ;
+    vec4 texColor = texture(ourTexture, TexCoord);
+    if(texColor.r == 1.0 && texColor.g == 0.0 && texColor.b >= 0.941 ){
+        discard;
+    }
+    if(texColor.r == 0.0 && texColor.g == 0.0 && texColor.b == 1.0 ){
+       texColor =  vec4(colorIN,1);
+    } 
+    material = texColor;
 }  

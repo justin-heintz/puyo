@@ -3,8 +3,8 @@ class drawOBJ {
 public:
     unsigned int VBO, VAO, DATA_POINTS = 3;
     float vert[32] = {
-        -1.0f, 1.0f, 0.0f,  1.0f, 0.0f, 0.0f,   1.0f, 1.0f,
-        -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
+       -1.0f, 1.0f, 0.0f,  1.0f, 0.0f, 0.0f,   -1.0f, 1.0f,
+       -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,   -1.0f, 0.0f,
         1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
         1.0f, 1.0f, 0.0f,  1.0f, 1.0f, 0.0f,   0.0f, 1.0f
     };
@@ -31,9 +31,6 @@ public:
         // texture coord attribute
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
         glEnableVertexAttribArray(2);
-         
-
-
 
         //clear buffers that are selected
         

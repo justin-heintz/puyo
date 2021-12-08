@@ -13,7 +13,7 @@ void main()
         discard;
     }
     if(texColor.r == 0.0 && texColor.g == 0.0 && texColor.b == 1.0 ){
-       texColor =  vec4(colorIN,1);
+        texColor =  vec4(colorIN,1);
     } 
     material = texColor;
 }  

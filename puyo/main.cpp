@@ -1,10 +1,9 @@
 //c++ libs
-
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <ctime>
-#include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <map>
@@ -35,10 +34,9 @@ float WINDOW_HEIGHT = 600;
 
 float UPDATE_TIMER = 60;
 
-//drawOBJ font_draw_obj;
-
 bool updateEL = true, updateDisplay = true;
 
+std::vector<drawOBJ*> textToDraw;
 std::vector<drawOBJ*> blocks;
 std::vector<Shader*> shaders;
 
@@ -51,24 +49,19 @@ FT_Library ft;
 
 int mouseX = 0, mouseY = 0;
 float R = 0.0;
-float V = -10.0f;
-
+float V = -5.0f;
+drawOBJ font_draw_obj;
 void setupFont() {
 	if (FT_Init_FreeType(&ft)) {
 		std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
 	}
-
-	//FT_Face face;
 	if (FT_New_Face(ft, "./fonts/Lato-Bold.ttf", 0, &face)) {
 		std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
 	}
-
 	FT_Set_Pixel_Sizes(face, 0, 48);
-
 	if (FT_Load_Char(face, 'X', FT_LOAD_RENDER)) {
 		std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
 	}
-
 	for (unsigned char cc = 0; cc < 128; cc++) {
 		// load character glyph 
 		if (FT_Load_Char(face, cc, FT_LOAD_RENDER)) {
@@ -114,18 +107,20 @@ void renderText(std::string text, float x, float y, float size, glm::vec3 color 
 		float w = ch.Size.x * size;
 		float h = ch.Size.y * size;
 		// update VBO for each character
-		std::vector<float> vertices{
-			 xpos,     ypos + h,   0.0f, 0.0f ,
-			 xpos,     ypos,       0.0f, 1.0f ,
-			 xpos + w, ypos,       1.0f, 1.0f ,
+		float vertices[] = {
+			xpos, ypos + h ,0.0f,		0.0f, 0.0f,
+			xpos, ypos, 0.0f,			0.0f, 1.0f,
+			xpos + w, ypos, 0.0f,		1.0f, 1.0f,
 
-			 xpos,     ypos + h,   0.0f, 0.0f ,
-			 xpos + w, ypos,       1.0f, 1.0f ,
-			 xpos + w, ypos + h,   1.0f, 0.0f
-		};
+			xpos, ypos + h, 0.0f,		0.0f, 0.0f,
+			xpos + w, ypos, 0.0f,		1.0f, 1.0f,
+			xpos + w, ypos + h, 0.0f,	1.0f, 0.0f
+			};
+
 		glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-		//font_draw_obj.setData(vertices);
-		//font_draw_obj.draw();
+		font_draw_obj.setData(vertices);
+		font_draw_obj.draw();
+
 		x += (ch.Advance >> 6) * size; // bitshift by 6 to get value in pixels (2^6 = 64)
 	}
 	glDisable(GL_BLEND);
@@ -133,9 +128,11 @@ void renderText(std::string text, float x, float y, float size, glm::vec3 color 
 }
 
 void init() {
+	
+	setupFont();
 
 	for (int i = 0; i < 1 ; i++) {
-		blocks.push_back( new drawOBJ() );
+		blocks.push_back(new drawOBJ());
 	}
  
 	//load shaders
@@ -154,9 +151,7 @@ void init() {
 	int width, height, nrChannels;
 	stbi_set_flip_vertically_on_load(true);
 
-	//unsigned char* data = stbi_load("container.jpg", &width, &height, &nrChannels, 0);
 	unsigned char* data = stbi_load("puyo2.png", &width, &height, &nrChannels, 0);
-	//unsigned char* data = stbi_load("block.png", &width, &height, &nrChannels, 0);
 	
 	if (data){
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -179,12 +174,12 @@ void draw() {
 			shaders[0]->setVec3("colorIN", glm::vec3(i * 0.06, i * 0.04, i * 0.02));
 
 			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::rotate(model, glm::radians(R), glm::vec3(1.0f, 1.0f, 1.0f));
+			//model = glm::rotate(model, glm::radians(R), glm::vec3(1.0f, 0.0f, 0.0f));
 			shaders[0]->setMat4("model", model);
 
 
 			glm::mat4 view = glm::mat4(1.0f);
-			view = glm::translate(view, glm::vec3(0.0, -5+0.5*i, V));
+			view = glm::translate(view, glm::vec3(1.0, 1.0, V));
 			shaders[0]->setMat4("view", view);
 
 
@@ -194,6 +189,8 @@ void draw() {
 
 			blocks[i]->draw();
 		}
+
+		renderText("I WOULD BE SO AMAZED", 0, 0, 20, glm::vec3(0.0f, 1.0f, 1.0f));
 
 		updateDisplay = false;
 		glutSwapBuffers();
@@ -225,7 +222,6 @@ void mouseFunc(int button, int state,	int x, int y) {
 }
 void mouseMoveFunc(int x, int y) {
 	std::cout << x << " | " << y << " | \n";
-	mouseX//
 }
 
  

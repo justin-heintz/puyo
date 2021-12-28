@@ -1,19 +1,22 @@
 #pragma once
 #include <algorithm>
+#include "structs.h"
+
 class drawOBJ {
 public:
     unsigned int VBO, VAO;
+
     float vert[20] = {
        -1.0f, 1.0f, 0.0f,  -1.0f, 1.0f,
-       -1.0f, -1.0f, 0.0f, -1.0f, 0.0f,
+       -1.0f, -1.0f, 0.0f,  -1.0f, 0.0f,
         1.0f, -1.0f, 0.0f,  0.0f, 0.0f,
         1.0f, 1.0f, 0.0f,   0.0f, 1.0f
     };
+
     std::vector<int> ind;
     std::vector<float> text;
-    drawOBJ(){
+    void create() {
         ind = { 0, 1, 3, 1, 2, 3 };
-
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
 
@@ -34,15 +37,18 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
-    void setData(float newVert[]) {
-        std::copy(std::begin(vert), std::end(vert), newVert);
-    }
+    void setData(float newVert[20]) {
+        for (int i = 0; i < 20; i++) {
+            vert[i] = newVert[i];
+        }
+     }
     void draw() {
+        outputLog("drawOBJ drawing",false);
         glBindVertexArray(VAO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vert), vert );
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawElements(GL_TRIANGLES, (ind.size()  ), GL_UNSIGNED_INT, ind.data());
+        glDrawElements(GL_TRIANGLES, (ind.size()), GL_UNSIGNED_INT, ind.data());
     }
 };  
 

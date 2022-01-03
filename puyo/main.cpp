@@ -47,17 +47,16 @@ std::vector<Shader*> shaders;
 
 drawOBJ textObj;
 drawOBJ puyoBlock;
-
-
+std::map<std::string, unsigned int> textures;
 std::map<GLchar, Character> Characters;
 std::string::const_iterator c;
 unsigned int texture;
 
+//FONT LIB
 FT_Face face;
 FT_Library ft;
 
-
-
+//DEV CRAP
 float x = 1.0;
 float y = 0.0;
 float z = -24.0f;
@@ -143,7 +142,7 @@ void renderText(drawOBJ* ftd, std::string text, float x, float y, float size, gl
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void genTexture(std::string path) {
+void genTexture(std::string name, std::string path) {
 	unsigned int texture;
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
@@ -159,8 +158,7 @@ void genTexture(std::string path) {
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
 
 	if (data) {
-		
-		printf("texture loaded With %i channels  \n", nrChannels);
+		printf("Texture %s is loaded With %i channels  \n", name.c_str(), nrChannels);
 
 		if (nrChannels == 3) {
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -173,7 +171,9 @@ void genTexture(std::string path) {
 	}else{ 
 		printf("Failed to load texture\n");
 	}
-	
+
+	textures.insert(std::pair<std::string, unsigned int>(name, texture));
+	printf("%s is mapped to ID %u \n\n", name.c_str(), textures[name]);
 }
 
 void init() {
@@ -183,9 +183,10 @@ void init() {
 	shaders.push_back(new Shader("./shaders/triangle.vec", "./shaders/triangle.frag"));
 	shaders.push_back(new Shader("./shaders/ttf.vec", "./shaders/ttf.frag"));
 
-	genTexture("textures/puyo.png");
-	genTexture("textures/test.png");
-
+	genTexture("puyo","textures/puyo.png");
+	genTexture("test","textures/test.png");
+	genTexture("ani","textures/animation_test.png");
+	
 	textObj.create();
 	puyoBlock.create();
 
@@ -223,15 +224,12 @@ void draw() {
 		shaders[0]->setMat4("projection", projection);
 		glDisable(GL_BLEND);//disable this or  everything is transparent
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, 130);
+		glBindTexture(GL_TEXTURE_2D, textures["puyo"]);
 
 		for (int i = 0; i < std::size(slimes); i++) {
 
 			glm::mat4 view = glm::mat4(1.0f);
 			view = glm::translate(view, glm::vec3((x - (WINDOW_WIDTH/2)) * 0.15 , (y - (WINDOW_HEIGHT/2)) * - 0.15, z));
-			
-			
-
 			shaders[0]->setMat4("view", view);
 			slimes[i].draw();
 		}

@@ -36,21 +36,31 @@ float WINDOW_HEIGHT = 600;
 float UPDATE_TIMER = 60;
 bool REDRAW = true;
 
-std::string DEV_OUTPUT = "aaa";
+std::string DEV_OUTPUT = "";
 
 int ii = 0;
+
+//std::vector<drawOBJ*> drawObjs;
+drawOBJ slimes[4];
 
 std::vector<Shader*> shaders;
 
 drawOBJ textObj;
+drawOBJ puyoBlock;
 
-std::vector<float> flatvec(24);
+
 std::map<GLchar, Character> Characters;
 std::string::const_iterator c;
 unsigned int texture;
 
 FT_Face face;
 FT_Library ft;
+
+
+
+float x = 1.0;
+float y = 0.0;
+float z = -24.0f;
 
 void setupFont() {
 	if (FT_Init_FreeType(&ft)) {
@@ -94,7 +104,6 @@ void setupFont() {
 	FT_Done_Face(face);
 	FT_Done_FreeType(ft);
 }
-
 void renderText(drawOBJ* ftd, std::string text, float x, float y, float size, glm::vec3 color = glm::vec3(0.0f, 1.0f, 1.0f)) {
 	glm::mat4 projection = glm::ortho(0.0f, WINDOW_WIDTH, 0.0f, WINDOW_HEIGHT);
 	
@@ -134,37 +143,107 @@ void renderText(drawOBJ* ftd, std::string text, float x, float y, float size, gl
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void genTexture(std::string path) {
+	unsigned int texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	// set the texture wrapping/filtering options (on the currently bound texture object)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// load and generate the texture
+	int width, height, nrChannels;
+	stbi_set_flip_vertically_on_load(true);
+
+	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
+
+	if (data) {
+		
+		printf("texture loaded With %i channels  \n", nrChannels);
+
+		if (nrChannels == 3) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		} else {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		}
+		
+		glGenerateMipmap(GL_TEXTURE_2D);
+		stbi_image_free(data);
+	}else{ 
+		printf("Failed to load texture\n");
+	}
+	
+}
+
 void init() {
 	setupFont();
+
 	//load shaders
 	shaders.push_back(new Shader("./shaders/triangle.vec", "./shaders/triangle.frag"));
 	shaders.push_back(new Shader("./shaders/ttf.vec", "./shaders/ttf.frag"));
 
+	genTexture("textures/puyo.png");
+	genTexture("textures/test.png");
+
 	textObj.create();
+	puyoBlock.create();
+
+ 
+	for (int i = 0; i < std::size(slimes); i++) {
+		slimes[i].create();
+	}
+	
 	outputLog("init");
 }
 void draw() {
+	//float x = 1.0;
+	//float y = 0.0;
+
 	if (REDRAW) {
 		glEnable(GL_DEPTH_TEST);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClearColor(1.2f, 0.3f, 0.3f, 1.0f);//red
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 		outputLog("draw", false);
 
-		renderText(&textObj,"abcdefghijklmnopqrstuvwxyz", 480.0f, 550.0f, 0.5, glm::vec3(1.0, 1.0, 1.0));
-		renderText(&textObj, "Eat Fresh Bro", 480.0f, 500.0f, 1, glm::vec3(1.0, 1.0, 1.0));
-		renderText(&textObj, "--" + std::to_string(ii)+std::to_string(true)+"--", 0, 500.0f, 1, glm::vec3(1.0, 1.0, 1.0));
+		glm::mat4 model = glm::mat4(1.0f);
+		//model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+		//model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 
+		//glm::mat4 view = glm::mat4(1.0f);
+		//view = glm::translate(view, glm::vec3(x-100, 0.0, 0.0f));
+
+		glm::mat4 projection;
+		projection = projection = glm::perspective(45.0f, WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);//glm::perspective(fov, aspect, near, far);
+
+		shaders[0]->use();
+		shaders[0]->setMat4("model", model);
+		shaders[0]->setMat4("projection", projection);
+		glDisable(GL_BLEND);//disable this or  everything is transparent
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, 130);
+
+		for (int i = 0; i < std::size(slimes); i++) {
+
+			glm::mat4 view = glm::mat4(1.0f);
+			view = glm::translate(view, glm::vec3((x - (WINDOW_WIDTH/2)) * 0.15 , (y - (WINDOW_HEIGHT/2)) * - 0.15, z));
+			
+			
+
+			shaders[0]->setMat4("view", view);
+			slimes[i].draw();
+		}
+
+		renderText(&textObj, "abcdefghijklmnopqrstuvwxyz", 480.0f, 550.0f, 0.5, glm::vec3(1.0, 1.0, 1.0));
+		renderText(&textObj, "Eat Fresh Bro", 480.0f, 500.0f, 1, glm::vec3(1.0, 1.0, 1.0));
+		renderText(&textObj, "--" + std::to_string(ii) + std::to_string(true) + "--", 0, 500.0f, 1, glm::vec3(1.0, 1.0, 1.0));
 		renderText(&textObj, DEV_OUTPUT, 0, 0, 1, glm::vec3(1.0, 1.0, 1.0));
-		DEV_OUTPUT = "*";
+		
 		REDRAW = false;
 		glutSwapBuffers();
 	}
-}
-void cleartext(int) {
-	DEV_OUTPUT = "*";
 }
 void update(int) {
 	glutPostRedisplay();
@@ -175,19 +254,22 @@ void update(int) {
 }
 
 void normalKeysFunc(unsigned char key, int x, int y) {
-	if (key == 'w') { DEV_OUTPUT = " W "; }
-	if (key == 's') { DEV_OUTPUT = " S "; }
-	if (key == 'a') { DEV_OUTPUT = " A "; }
-	if (key == 'd') { DEV_OUTPUT = " D "; }
+	DEV_OUTPUT = key;
+	if (key == 'w') { z = z + 0.1; }
+	if (key == 's') { z = z - 0.1; }
+	if (key == 'a') {}
+	if (key == 'd') {}
 }
-void mouseFunc(int button, int state, int x, int y) {
+void mouseFunc(int button, int state, int mx, int my) {
 	std::cout << button << " | " << state << " | " << x << " | " << y << " | \n";
-	DEV_OUTPUT += button + " | " + std::to_string(state) + " | " + std::to_string(x) + " | " + std::to_string(y)+" \n";
+	DEV_OUTPUT = button + " | " + std::to_string(state) + " | " + std::to_string(mx) + " | " + std::to_string(my) + " | " + std::to_string(z);
 
 }
-void mouseMoveFunc(int x, int y) {
+void mouseMoveFunc(int mx, int my) {
 	std::cout << x << " | " << y << " | \n";
-	DEV_OUTPUT += std::to_string(x) + " | " + std::to_string(y) + " \n";
+	DEV_OUTPUT = std::to_string(x) + " | " + std::to_string(y) + " | " + std::to_string(z);
+	x =  mx;
+	y =  my;
 }
 
 void main(int argc, char** argv) {
@@ -201,8 +283,9 @@ void main(int argc, char** argv) {
 	
 	glEnable(GL_MULTISAMPLE);
 
-	glEnable(GL_TEXTURE_2D);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // disable byte-alignment restriction "WHAT DOES This Mean" ?
+	glEnable(GL_TEXTURE_2D);
+	
 
 	glewInit();
 	init();

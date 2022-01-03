@@ -1,4 +1,0 @@
-main.o: C:\Users\justinh\source\repos\puyo\puyo\main.cpp \
- C:\Users\justinh\source\repos\puyo\puyo\drawobj.h \
- C:\Users\justinh\source\repos\puyo\puyo\shader.h \
- C:\Users\justinh\source\repos\puyo\puyo\structs.h

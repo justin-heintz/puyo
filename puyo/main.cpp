@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <iterator>
 #include <vector>
 #include <ctime>
 #include <fstream>
@@ -24,12 +25,17 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H 
 
+#include <stdlib.h>
+#include <time.h>
+
 //my libs
 #include "drawobj.h"
 #include "shader.h"
-
-bool logAll = true;
 #include "structs.h"
+
+#include "grid.h"
+#include "slime.h"
+
 
 float WINDOW_WIDTH = 800;
 float WINDOW_HEIGHT = 600;
@@ -38,10 +44,8 @@ bool REDRAW = true;
 
 std::string DEV_OUTPUT = "";
 
-int ii = 0;
-
 //std::vector<drawOBJ*> drawObjs;
-drawOBJ slimes[4];
+drawOBJ slimes[6];
 
 std::vector<Shader*> shaders;
 
@@ -57,10 +61,15 @@ FT_Face face;
 FT_Library ft;
 
 //DEV CRAP
-float x = 1.0;
-float y = 0.0;
-float z = -24.0f;
+float x = 400.0;
+float y = 300.0;
+float z = -30.0f;
+int iSecret = rand() % 5 + 1;
 
+grid gameBoard;
+slime first;
+vector<slime>sls;
+bool lines = true;
 void setupFont() {
 	if (FT_Init_FreeType(&ft)) {
 		outputLog("ERROR::FREETYPE: Could not init FreeType Library");
@@ -87,8 +96,8 @@ void setupFont() {
 		// set texture options
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		// now store character for later use
 		Character character = {
 			texture,
@@ -104,6 +113,8 @@ void setupFont() {
 	FT_Done_FreeType(ft);
 }
 void renderText(drawOBJ* ftd, std::string text, float x, float y, float size, glm::vec3 color = glm::vec3(0.0f, 1.0f, 1.0f)) {
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glm::mat4 projection = glm::ortho(0.0f, WINDOW_WIDTH, 0.0f, WINDOW_HEIGHT);
 	
 	shaders[1]->use();
@@ -112,8 +123,8 @@ void renderText(drawOBJ* ftd, std::string text, float x, float y, float size, gl
 
 	glActiveTexture(GL_TEXTURE0);
 
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	
+	
 	for (c = text.begin(); c != text.end(); c++) {
 		Character ch = Characters[*c];
 
@@ -124,10 +135,10 @@ void renderText(drawOBJ* ftd, std::string text, float x, float y, float size, gl
 		float h = (ch.Size.y * size);
 		// update VBO for each character
 		float v1[] = {
-			xpos, ypos + h, 0.0f,			0.0f, 0.0f,
-			xpos, ypos, 0.0f,				0.0f, 1.0f,
-			xpos + w, ypos, 0.0f,			1.0f, 1.0f,
-			xpos + w, ypos + h, 0.0f,		1.0f, 0.0f,
+			xpos, ypos + h, 			0.0f, 0.0f,
+			xpos, ypos, 				0.0f, 1.0f,
+			xpos + w, ypos, 			1.0f, 1.0f,
+			xpos + w, ypos + h, 		1.0f, 0.0f,
 		};
 
 		glBindTexture(GL_TEXTURE_2D, ch.TextureID);
@@ -140,6 +151,7 @@ void renderText(drawOBJ* ftd, std::string text, float x, float y, float size, gl
 
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+	
 }
 
 void genTexture(std::string name, std::string path) {
@@ -147,10 +159,10 @@ void genTexture(std::string name, std::string path) {
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	// set the texture wrapping/filtering options (on the currently bound texture object)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	// load and generate the texture
 	int width, height, nrChannels;
 	stbi_set_flip_vertically_on_load(true);
@@ -178,7 +190,7 @@ void genTexture(std::string name, std::string path) {
 
 void init() {
 	setupFont();
-
+	
 	//load shaders
 	shaders.push_back(new Shader("./shaders/triangle.vec", "./shaders/triangle.frag"));
 	shaders.push_back(new Shader("./shaders/ttf.vec", "./shaders/ttf.frag"));
@@ -186,105 +198,162 @@ void init() {
 	genTexture("puyo","textures/puyo.png");
 	genTexture("test","textures/test.png");
 	genTexture("ani","textures/animation_test.png");
-	
+		
+	sls.push_back(slime());
+	sls[0].create();
+	sls[0].updateCords(glm::vec2(400,300));
 	textObj.create();
-	puyoBlock.create();
-
  
 	for (int i = 0; i < std::size(slimes); i++) {
 		slimes[i].create();
 	}
-	
-	outputLog("init");
 }
 void draw() {
-	//float x = 1.0;
-	//float y = 0.0;
-
 	if (REDRAW) {
 		glEnable(GL_DEPTH_TEST);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		if (!lines) {
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}else{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
 
-		outputLog("draw", false);
+		//rotate: translate: scale
 
-		glm::mat4 model = glm::mat4(1.0f);
-		//model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-		//model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-
-		//glm::mat4 view = glm::mat4(1.0f);
-		//view = glm::translate(view, glm::vec3(x-100, 0.0, 0.0f));
+		// 570d1d RED vec3(0.341,0.051,0.114)
+		// 0a421e GREEN vec3(0.039,0.259,0.118)
+		// 2545a0 BLUE vec3(0.145,0.271,0.627)
+		// 604000 YELLOW vec3(0.376,0.251,0.)
+		// 4d17b7 PURPLE vec3(0.302,0.09,0.718)
 
 		glm::mat4 projection;
 		projection = projection = glm::perspective(45.0f, WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);//glm::perspective(fov, aspect, near, far);
 
 		shaders[0]->use();
-		shaders[0]->setMat4("model", model);
-		shaders[0]->setMat4("projection", projection);
-		glDisable(GL_BLEND);//disable this or  everything is transparent
+
+		switch (rand() % 5 + 1) {
+		case 1:
+			shaders[0]->setVec4("colorIn", glm::vec4(1.0, 1.0, 0.0, 1.0));
+		break;
+		case 2:
+			shaders[0]->setVec4("colorIn", glm::vec4(0.039, 0.259, 0.118, 1.0));
+		break;
+		case 3:
+			shaders[0]->setVec4("colorIn", glm::vec4(0.145, 0.271, 0.627, 1.0));
+		break;
+		case 4:
+			shaders[0]->setVec4("colorIn", glm::vec4(0.302, 0.09, 0.718, 1.0));
+		break;
+		case 5:
+			shaders[0]->setVec4("colorIn", glm::vec4(0.376, 0.251, 0.0, 1.0));
+		break;
+		}
+
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textures["puyo"]);
+		glBindTexture(GL_TEXTURE_2D, textures["ani"]);
 
 		for (int i = 0; i < std::size(slimes); i++) {
-
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(x + (2 * i ), 1.0f, 1.0f));
+			shaders[0]->setMat4("model", model);
+			
 			glm::mat4 view = glm::mat4(1.0f);
-			view = glm::translate(view, glm::vec3((x - (WINDOW_WIDTH/2)) * 0.15 , (y - (WINDOW_HEIGHT/2)) * - 0.15, z));
+			view = glm::translate(view, glm::vec3((x - (WINDOW_WIDTH / 2)) * 0.15, (y - (WINDOW_HEIGHT / 2)) * -0.15, z));
 			shaders[0]->setMat4("view", view);
+			
+			shaders[0]->setMat4("projection", projection);
 			slimes[i].draw();
 		}
 
-		renderText(&textObj, "abcdefghijklmnopqrstuvwxyz", 480.0f, 550.0f, 0.5, glm::vec3(1.0, 1.0, 1.0));
+		shaders[0]->use();
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(1.0f, 1.0f, 1.0f));
+		shaders[0]->setMat4("model", model);
+
+		glm::mat4 view = glm::mat4(1.0f);
+		view = glm::translate(view, glm::vec3((sls[0].cords.x - (WINDOW_WIDTH / 2)) , (sls[0].cords.y - (WINDOW_HEIGHT / 2)) , z));
+		shaders[0]->setMat4("view", view);
+
+		shaders[0]->setMat4("projection", projection);
+		sls[0].image.draw();
+
+		renderText(&textObj, "abcdefghijklmnopqrstuvwxyz", 480.0f, 550.0f, 0.5, glm::vec3(0.341, 0.051, 0.114));
 		renderText(&textObj, "Eat Fresh Bro", 480.0f, 500.0f, 1, glm::vec3(1.0, 1.0, 1.0));
-		renderText(&textObj, "--" + std::to_string(ii) + std::to_string(true) + "--", 0, 500.0f, 1, glm::vec3(1.0, 1.0, 1.0));
-		renderText(&textObj, DEV_OUTPUT, 0, 0, 1, glm::vec3(1.0, 1.0, 1.0));
 		
+
 		REDRAW = false;
 		glutSwapBuffers();
 	}
 }
+
+void updateFrames(int) {
+	for (int i = 0; i < std::size(slimes); i++) {
+		slimes[i].updateTexturePos();
+	}
+	sls[0].image.updateTexturePos();
+	glutTimerFunc(1000.0 /3, updateFrames, 0);
+}
 void update(int) {
+	/*
+	float xpos = 0, ypos = -20, w = 20, h=20;
+	float xpos = 0, ypos = 0, w = 0, h = 0;
+	float v1[] =
+	{
+		xpos, ypos + h,		  0.0f, 1.0f,
+		xpos, ypos,			  0.0f, 0.0f,
+		xpos + w, ypos,		  1.0f, 0.0f,
+		xpos + w, ypos + h,   1.0f, 1.0f
+	};
+
+	sls[0].image.setData(v1);
+	*/
+	first.cords.x += 0.05;
+	first.updateCords(glm::vec2(0.1,1.1));
+	x = first.cords.x;
+	y = first.cords.y;
 	glutPostRedisplay();
-	outputLog("update",false);
-	ii++;
+	
+	// initialize random seed:
+	iSecret = rand() % 5 + 1;
+	srand(time(NULL));
+	//printf("x:%f, y:%f \n", x, y);
 	REDRAW = true;
 	glutTimerFunc(1000.0 / UPDATE_TIMER, update, 0);
 }
 
 void normalKeysFunc(unsigned char key, int x, int y) {
 	DEV_OUTPUT = key;
-	if (key == 'w') { z = z + 0.1; }
-	if (key == 's') { z = z - 0.1; }
-	if (key == 'a') {}
-	if (key == 'd') {}
+	if (key == 'w') { z = z + 0.9; }
+	if (key == 's') { z = z - 0.9; }
+	if (key == 'a') { lines = false; printf("%d \n",lines); }
+	if (key == 'd') { lines = true; printf("%d \n", lines);	}
 }
-void mouseFunc(int button, int state, int mx, int my) {
-	std::cout << button << " | " << state << " | " << x << " | " << y << " | \n";
-	DEV_OUTPUT = button + " | " + std::to_string(state) + " | " + std::to_string(mx) + " | " + std::to_string(my) + " | " + std::to_string(z);
 
+void mouseFunc(int button, int state, int mx, int my) {
+	DEV_OUTPUT = button + " | " + std::to_string(state) + " | " + std::to_string(mx) + " | " + std::to_string(my) + " | " + std::to_string(z);
 }
 void mouseMoveFunc(int mx, int my) {
-	std::cout << x << " | " << y << " | \n";
 	DEV_OUTPUT = std::to_string(x) + " | " + std::to_string(y) + " | " + std::to_string(z);
-	x =  mx;
-	y =  my;
+	//x =  mx;
+	//y =  my;
 }
 
 void main(int argc, char** argv) {
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);
+	glutInitDisplayMode(GLUT_RGBA);
 	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	glutInitWindowPosition(200, 200);
+	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 	glutCreateWindow("DEV");
 
-	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-	
 	glEnable(GL_MULTISAMPLE);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_2D);
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // disable byte-alignment restriction "WHAT DOES This Mean" ?
-	glEnable(GL_TEXTURE_2D);
 	
-
+	
 	glewInit();
 	init();
 	
@@ -299,7 +368,7 @@ void main(int argc, char** argv) {
 
 	//update
 	glutTimerFunc(1000.0 / UPDATE_TIMER, update, 0);
-	//glutTimerFunc(100, cleartext, 0);
+	glutTimerFunc(1000.0 / 3, updateFrames, 0);
 
 	//start looop
 	glutMainLoop();

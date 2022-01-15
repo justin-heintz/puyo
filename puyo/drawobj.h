@@ -3,52 +3,71 @@
 #include "structs.h"
 
 class drawOBJ {
-public:
-    unsigned int VBO, VAO;
+    private:
+        GLuint VBO, VAO;
+    public:
+        
+        float vert[16] = {
+           -1.0f, 1.0f,   0.0f, 1.0f,
+           -1.0f, -1.0f,  0.0f, 0.0f,
+            1.0f, -1.0f,   0.34f, 0.0f,
+            1.0f, 1.0f,    0.34f, 1.0f
+        };
 
-    float vert[20] = {
-       -1.0f, 1.0f, 1.0f,  -1.0f, 1.0f,
-       -1.0f, -1.0f, 1.0f,  -1.0f, 0.0f,
-        1.0f, -1.0f, 1.0f,  0.0f, 0.0f,
-        1.0f, 1.0f, 1.0f,   0.0f, 1.0f
-    };
+        int currentframe = 0;
+        int maxframe = 2;
+        int frameSpeed = 0.25;
+        GLfloat frameSizeWidth = .333333333;
+        std::vector<int> frames = {};
 
-    std::vector<int> ind;
-    std::vector<float> text;
-    void create() {
-        ind = { 0, 1, 3, 1, 2, 3 };
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
+        std::vector<int> ind;
 
-        glBindVertexArray(VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        void create() {
+            ind = { 0, 1, 3, 1, 2, 3 };
 
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vert), vert, GL_DYNAMIC_DRAW);
+            glGenVertexArrays(1, &VAO);
+            glGenBuffers(1, &VBO);
 
-        //vec cord attribute
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
+            glBindVertexArray(VAO);
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-        //texture cord attribute
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(vert), vert, GL_DYNAMIC_DRAW);
 
-        //clear buffers that are selected
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-    }
-    void setData(float newVert[20]) {
-        for (int i = 0; i < 20; i++) {
-            vert[i] = newVert[i];
+            //vec cord attribute
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+            glEnableVertexAttribArray(0);
+
+            //texture cord attribute
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+            glEnableVertexAttribArray(1);
+
+            //clear buffers that are selected
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glBindVertexArray(0);
         }
-     }
-    void draw() {
-        outputLog("drawOBJ drawing",false);
-        glBindVertexArray(VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vert), vert );
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawElements(GL_TRIANGLES, (ind.size()), GL_UNSIGNED_INT, ind.data());
-    }
+        void updateTexturePos() {
+            currentframe++;
+            if (currentframe >= maxframe) {
+                currentframe = 0;
+            }
+            vert[2] =  currentframe* frameSizeWidth;
+            vert[6] =  currentframe* frameSizeWidth;
+            vert[10] =  (currentframe * frameSizeWidth) + frameSizeWidth;
+            vert[14] =   (currentframe * frameSizeWidth) + frameSizeWidth;
+            printf("%f : %f\n", vert[2], vert[14]);
+        }
+        
+        void setData(float newVert[16]) {
+            for (int i = 0; i < 16; i++) {
+                vert[i] = newVert[i];
+            }
+         }
+        void draw() {
+            glBindVertexArray(VAO);
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vert), vert );
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glDrawElements(GL_TRIANGLES, (ind.size()), GL_UNSIGNED_INT, ind.data());
+        }
 };  
 
